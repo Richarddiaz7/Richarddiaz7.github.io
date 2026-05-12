@@ -73,11 +73,24 @@
         tg.expand();
         const TMDB_API = "d73daaeb037829af157af19c3bc8b1fd";
         
+        // Función para obtener IMDB ID desde TMDb
+        async function getIMDBId(tmdbId, tipo) {
+            try {
+                const url = `https://api.themoviedb.org/3/${tipo}/${tmdbId}/external_ids?api_key=${TMDB_API}`;
+                const res = await fetch(url);
+                const data = await res.json();
+                return data.imdb_id || tmdbId;
+            } catch(e) {
+                return tmdbId;
+            }
+        }
+        
         function hideWelcome() { document.getElementById('welcome').style.display = 'none'; }
         function showLoading() { document.getElementById('loading').classList.add('active'); document.getElementById('results').innerHTML = ''; }
         function hideLoading() { document.getElementById('loading').classList.remove('active'); }
         
-        function playMovie(imdbId, tipo) {
+        async function playMovie(tmdbId, tipo) {
+            const imdbId = await getIMDBId(tmdbId, tipo);
             const url = `https://vidsrc.me/embed/${tipo}?imdb=${imdbId}`;
             document.getElementById('videoFrame').src = url;
             document.getElementById('videoPlayer').classList.add('active');
@@ -97,7 +110,7 @@
                 const res = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${TMDB_API}&query=${encodeURIComponent(query)}&language=es-ES`);
                 const data = await res.json();
                 displayMovies(data.results || []);
-            } catch(e) { alert('Error'); }
+            } catch(e) { alert('Error al buscar'); }
             hideLoading();
         }
         
@@ -108,7 +121,7 @@
                 const res = await fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API}&with_genres=${genreId}&language=es-ES&sort_by=popularity.desc`);
                 const data = await res.json();
                 displayMovies(data.results || []);
-            } catch(e) { alert('Error'); }
+            } catch(e) { alert('Error al cargar género'); }
             hideLoading();
         }
         
