@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <title>Richard Cinema</title>
+    <title>MyXinema</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -15,7 +15,20 @@
             padding: 20px;
         }
         .header { text-align: center; margin-bottom: 30px; }
-        .header h1 { font-size: 2em; background: linear-gradient(135deg, #FFD700, #FF6B6B); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .logo {
+            width: 100px;
+            height: 100px;
+            border-radius: 25px;
+            margin-bottom: 15px;
+            box-shadow: 0 0 20px rgba(255,107,107,0.5);
+        }
+        .header h1 { 
+            font-size: 2em; 
+            background: linear-gradient(135deg, #FFD700, #FF6B6B); 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+            background-clip: text;
+        }
         .search-box { display: flex; gap: 10px; margin-bottom: 20px; }
         .search-input { flex: 1; padding: 15px; border: none; border-radius: 15px; background: rgba(255,255,255,0.1); color: white; font-size: 16px; }
         .search-input::placeholder { color: rgba(255,255,255,0.6); }
@@ -40,8 +53,9 @@
 </head>
 <body>
     <div class="header">
-        <h1>🎬 Richard Cinema</h1>
-        <p>Tu cine en Telegram</p>
+        <img class="logo" src="https://i.imgur.com/xbwwor3.png" alt="MyXinema">
+        <h1>🎬 MyXinema</h1>
+        <p>Tu cine personal en Telegram</p>
     </div>
     
     <div class="search-box">
@@ -71,7 +85,6 @@
         const tg = window.Telegram.WebApp;
         tg.ready();
         tg.expand();
-        tg.requestFullscreen();
         
         const TMDB_API = "d73daaeb037829af157af19c3bc8b1fd";
         
@@ -99,7 +112,6 @@
             frame.src = url;
             player.classList.add('active');
             
-            // Forzar pantalla completa en el iframe
             setTimeout(() => {
                 try { frame.requestFullscreen(); } catch(e) {}
             }, 500);
@@ -108,7 +120,6 @@
         function closeVideo() {
             document.getElementById('videoFrame').src = '';
             document.getElementById('videoPlayer').classList.remove('active');
-            // Salir de pantalla completa
             try { document.exitFullscreen(); } catch(e) {}
         }
         
@@ -150,7 +161,6 @@
             }).join('');
         }
         
-        // Escuchar cuando se salga de pantalla completa para cerrar el player
         document.addEventListener('fullscreenchange', () => {
             if (!document.fullscreenElement) {
                 closeVideo();
