@@ -16,7 +16,7 @@
         }
         .header { text-align: center; margin-bottom: 30px; }
         .header h1 { font-size: 2em; background: linear-gradient(135deg, #FFD700, #FF6B6B); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .search-box { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .search-box { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
         .search-input { flex: 1; padding: 15px; border: none; border-radius: 15px; background: rgba(255,255,255,0.1); color: white; font-size: 16px; }
         .search-input::placeholder { color: rgba(255,255,255,0.6); }
         .search-btn { padding: 15px 25px; border: none; border-radius: 15px; background: linear-gradient(135deg, #FF6B6B, #FF8E53); color: white; font-weight: bold; cursor: pointer; }
@@ -38,6 +38,7 @@
         .welcome { text-align: center; padding: 40px; background: rgba(255,255,255,0.05); border-radius: 20px; }
         button:active { transform: scale(0.95); }
         label.source-label { font-size: 14px; margin-right: 5px; align-self: center; }
+        .note { font-size: 12px; color: #aaa; margin-top: 5px; text-align: center; }
     </style>
 </head>
 <body>
@@ -52,13 +53,14 @@
         <div style="display: flex; align-items: center; gap: 5px; margin-left: 10px;">
             <label for="sourceSelect" class="source-label">📺 API:</label>
             <select id="sourceSelect" class="source-selector">
-                <option value="vidsrc">Vidsrc.me (actual)</option>
-                <option value="autoembed">Autoembed.co</option>
-                <option value="primesrc">PrimeSrc.me</option>
-                <option value="2embed">2embed.to</option>
+                <option value="vidsrc">Vidsrc.me (iframe)</option>
+                <option value="autoembed">Autoembed.co (navegador)</option>
+                <option value="primesrc">PrimeSrc.me (navegador)</option>
+                <option value="2embed">2embed.to (navegador)</option>
             </select>
         </div>
     </div>
+    <div class="note">⚡ Solo Vidsrc se reproduce dentro de la app. Las demás abren el reproductor en tu navegador.</div>
     
     <div class="genres">
         <button class="genre-btn" onclick="getGenre(28)">🔥 Acción</button>
@@ -101,42 +103,42 @@
         function showLoading() { document.getElementById('loading').classList.add('active'); document.getElementById('results').innerHTML = ''; }
         function hideLoading() { document.getElementById('loading').classList.remove('active'); }
         
-        // Construye la URL según la fuente y tipo (movie/tv)
         function buildPlayUrl(source, tipo, imdbId) {
-            // Asegurar que el ID de IMDb tenga el prefijo "tt"
             const imdb = imdbId.startsWith('tt') ? imdbId : `tt${imdbId}`;
             switch(source) {
                 case 'vidsrc':
                     return `https://vidsrc.me/embed/${tipo}?imdb=${imdb}&autoplay=1`;
                 case 'autoembed':
-                    // autoembed.co soporta movie y tv
                     return `https://autoembed.co/${tipo}/imdb.php?imdb=${imdb}`;
                 case 'primesrc':
                     return `https://primesrc.me/${tipo}/imdb/${imdb}`;
                 case '2embed':
-                    // 2embed.to usa /embed/imdb/... para ambos, pero podemos diferenciar
                     return `https://2embed.to/embed/imdb/${imdb}`;
                 default:
-                    // fallback a vidsrc
                     return `https://vidsrc.me/embed/${tipo}?imdb=${imdb}&autoplay=1`;
             }
         }
         
         async function playMovie(tmdbId, tipo) {
             const imdbId = await getIMDBId(tmdbId, tipo);
-            const source = document.getElementById('sourceSelect').value; // API seleccionada
+            const source = document.getElementById('sourceSelect').value;
             const url = buildPlayUrl(source, tipo, imdbId);
             
-            const frame = document.getElementById('videoFrame');
-            const player = document.getElementById('videoPlayer');
-            
-            frame.src = url;
-            player.classList.add('active');
-            
-            // Forzar pantalla completa en el iframe
-            setTimeout(() => {
-                try { frame.requestFullscreen(); } catch(e) {}
-            }, 500);
+            if (source === 'vidsrc') {
+                // Reproducir en iframe (soportado)
+                const frame = document.getElementById('videoFrame');
+                const player = document.getElementById('videoPlayer');
+                frame.src = url;
+                player.classList.add('active');
+                setTimeout(() => {
+                    try { frame.requestFullscreen(); } catch(e) {}
+                }, 500);
+            } else {
+                // Abrir en navegador externo con Telegram API
+                tg.openLink(url);
+                // Opcional: mostrar un toast de confirmación
+                tg.showPopup({ message: 'Abriendo reproductor externo...' });
+            }
         }
         
         function closeVideo() {
