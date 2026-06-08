@@ -38,6 +38,26 @@
         .welcome { text-align: center; padding: 40px; background: rgba(255,255,255,0.05); border-radius: 20px; }
         button:active { transform: scale(0.95); }
         label.source-label { font-size: 14px; margin-right: 5px; align-self: center; }
+
+        /* Modal para seleccionar temporada/episodio */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); z-index: 10001;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .modal {
+            background: #1e1e2f; border-radius: 20px; padding: 25px;
+            width: 90%; max-width: 320px; text-align: center;
+        }
+        .modal h3 { margin-bottom: 20px; }
+        .modal input {
+            width: 80px; padding: 10px; margin: 0 5px; border-radius: 10px;
+            border: none; background: rgba(255,255,255,0.1); color: white; text-align: center; font-size: 16px;
+        }
+        .modal button {
+            margin-top: 20px; padding: 12px 30px; border: none; border-radius: 20px;
+            background: linear-gradient(135deg, #FF6B6B, #FF8E53); color: white; font-weight: bold; cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -59,7 +79,7 @@
             </select>
         </div>
     </div>
-    <div style="text-align:center; font-size:12px; color:#aaa; margin-bottom:10px;">🔒 Bloqueo de anuncios en móvil. En PC usa PlayIMDB o Autoembed.</div>
+    <div style="text-align:center; font-size:12px; color:#aaa; margin-bottom:10px;">🔒 Bloqueo de anuncios en móvil. Series: elige temporada y episodio.</div>
     
     <div class="genres">
         <button class="genre-btn" onclick="getGenre(28)">🔥 Acción</button>
@@ -79,6 +99,23 @@
         <iframe id="videoFrame" class="video-frame" allowfullscreen 
                 sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"></iframe>
     </div>
+
+    <!-- Modal para temporada/episodio (oculto por defecto) -->
+    <div id="seasonModal" class="modal-overlay" style="display: none;">
+        <div class="modal">
+            <h3>📺 Selecciona episodio</h3>
+            <div style="display: flex; justify-content: center; align-items: center; gap: 10px; margin: 15px 0;">
+                <label>Temporada</label>
+                <input type="number" id="seasonInput" value="1" min="1" max="30">
+            </div>
+            <div style="display: flex; justify-content: center; align-items: center; gap: 10px; margin: 15px 0;">
+                <label>Episodio</label>
+                <input type="number" id="episodeInput" value="1" min="1" max="50">
+            </div>
+            <button onclick="confirmSeriesPlay()">▶ Reproducir</button>
+            <button onclick="closeModal()" style="background: #555; margin-left: 10px;">Cancelar</button>
+        </div>
+    </div>
     
     <script>
         const tg = window.Telegram.WebApp;
@@ -87,6 +124,10 @@
         tg.requestFullscreen();
         
         const TMDB_API = "d73daaeb037829af157af19c3bc8b1fd";
+        
+        // Variables globales para almacenar la serie seleccionada antes de pedir temporada
+        let pendingTmdbId = null;
+        let pendingTipo = null;
         
         async function getIMDBId(tmdbId, tipo) {
             try {
@@ -103,7 +144,7 @@
         function showLoading() { document.getElementById('loading').classList.add('active'); document.getElementById('results').innerHTML = ''; }
         function hideLoading() { document.getElementById('loading').classList.remove('active'); }
         
-        function buildPlayUrl(source, tipo, imdbId) {
+        function buildPlayUrl(source, tipo, imdbId, season = 1, episode = 1) {
             const imdb = imdbId.startsWith('tt') ? imdbId : `tt${imdbId}`;
             switch(source) {
                 case 'vidsrcto':
@@ -113,15 +154,56 @@
                 case 'playimdb':
                     return `https://playimdb.com/embed/imdb/${imdb}`;
                 case 'autoembed':
-                    return tipo === 'movie'
-                        ? `https://autoembed.co/movie/imdb/${imdb}`
-                        : `https://autoembed.co/tv/imdb/${imdb}-1-1`;
+                    if (tipo === 'tv') {
+                        return `https://autoembed.co/tv/imdb/${imdb}-${season}-${episode}`;
+                    } else {
+                        return `https://autoembed.co/movie/imdb/${imdb}`;
+                    }
                 default:
                     return `https://vidsrc.to/embed/${tipo}/${imdb}`;
             }
         }
         
+        function showSeasonModal(tmdbId, tipo) {
+            pendingTmdbId = tmdbId;
+            pendingTipo = tipo;
+            document.getElementById('seasonInput').value = 1;
+            document.getElementById('episodeInput').value = 1;
+            document.getElementById('seasonModal').style.display = 'flex';
+        }
+        
+        function closeModal() {
+            document.getElementById('seasonModal').style.display = 'none';
+            pendingTmdbId = null;
+            pendingTipo = null;
+        }
+        
+        async function confirmSeriesPlay() {
+            const season = document.getElementById('seasonInput').value || 1;
+            const episode = document.getElementById('episodeInput').value || 1;
+            closeModal();
+            if (!pendingTmdbId || !pendingTipo) return;
+            
+            const imdbId = await getIMDBId(pendingTmdbId, pendingTipo);
+            const source = document.getElementById('sourceSelect').value;
+            const url = buildPlayUrl(source, pendingTipo, imdbId, season, episode);
+            
+            const frame = document.getElementById('videoFrame');
+            const player = document.getElementById('videoPlayer');
+            frame.src = url;
+            player.classList.add('active');
+            setTimeout(() => {
+                try { frame.requestFullscreen(); } catch(e) {}
+            }, 500);
+        }
+        
         async function playMovie(tmdbId, tipo) {
+            if (tipo === 'tv') {
+                // Mostrar modal para elegir temporada y episodio
+                showSeasonModal(tmdbId, tipo);
+                return;
+            }
+            // Película: reproducir directamente
             const imdbId = await getIMDBId(tmdbId, tipo);
             const source = document.getElementById('sourceSelect').value;
             const url = buildPlayUrl(source, tipo, imdbId);
@@ -130,7 +212,6 @@
             const player = document.getElementById('videoPlayer');
             frame.src = url;
             player.classList.add('active');
-            
             setTimeout(() => {
                 try { frame.requestFullscreen(); } catch(e) {}
             }, 500);
