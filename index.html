@@ -71,14 +71,20 @@
         <div style="display: flex; align-items: center; gap: 5px; margin-left: 10px;">
             <label for="sourceSelect" class="source-label">📺 API:</label>
             <select id="sourceSelect" class="source-selector">
+                <option value="vidsrcxyz">Vidsrc.xyz</option>
+                <option value="vidsrccc">Vidsrc.cc</option>
                 <option value="vidsrcto">Vidsrc.to</option>
                 <option value="vidsrcpro">Vidsrc.pro</option>
+                <option value="vidsrcme">Vidsrc.me (original)</option>
+                <option value="embedsu">Embed.su</option>
                 <option value="playimdb">PlayIMDB.com</option>
                 <option value="autoembed">Autoembed.co</option>
             </select>
         </div>
     </div>
-    <div style="text-align:center; font-size:12px; color:#aaa; margin-bottom:10px;">🔒 Bloqueo de anuncios en móvil. Series: elige temporada y episodio.</div>
+    <div style="text-align:center; font-size:12px; color:#aaa; margin-bottom:10px;">
+        🔒 Sin anuncios en móvil. Series: elige temp/ep. Prueba varias fuentes para subtítulos 🇪🇸.
+    </div>
     
     <div class="genres">
         <button class="genre-btn" onclick="getGenre(28)">🔥 Acción</button>
@@ -122,7 +128,6 @@
         tg.requestFullscreen();
         
         const TMDB_API = "d73daaeb037829af157af19c3bc8b1fd";
-        
         let pendingTmdbId = null;
         let pendingTipo = null;
         
@@ -144,20 +149,18 @@
         function buildPlayUrl(source, tipo, imdbId, season = 1, episode = 1) {
             const imdb = imdbId.startsWith('tt') ? imdbId : `tt${imdbId}`;
             switch(source) {
-                case 'vidsrcto':
-                    return `https://vidsrc.to/embed/${tipo}/${imdb}`;
-                case 'vidsrcpro':
-                    return `https://vidsrc.pro/embed/${tipo}/${imdb}`;
-                case 'playimdb':
-                    return `https://playimdb.com/embed/imdb/${imdb}`;
-                case 'autoembed':
-                    if (tipo === 'tv') {
-                        return `https://autoembed.co/tv/imdb/${imdb}-${season}-${episode}`;
-                    } else {
-                        return `https://autoembed.co/movie/imdb/${imdb}`;
-                    }
-                default:
-                    return `https://vidsrc.to/embed/${tipo}/${imdb}`;
+                case 'vidsrcxyz':   return `https://vidsrc.xyz/embed/${tipo}/${imdb}`;
+                case 'vidsrccc':    return `https://vidsrc.cc/embed/${tipo}/${imdb}`;
+                case 'vidsrcto':    return `https://vidsrc.to/embed/${tipo}/${imdb}`;
+                case 'vidsrcpro':   return `https://vidsrc.pro/embed/${tipo}/${imdb}`;
+                case 'vidsrcme':    return `https://vidsrc.me/embed/${tipo}?imdb=${imdb}&autoplay=1`;
+                case 'embedsu':     return `https://embed.su/embed/${tipo}/${imdb}`;
+                case 'playimdb':    return `https://playimdb.com/embed/imdb/${imdb}`;
+                case 'autoembed':   
+                    return tipo === 'tv' 
+                        ? `https://autoembed.co/tv/imdb/${imdb}-${season}-${episode}` 
+                        : `https://autoembed.co/movie/imdb/${imdb}`;
+                default: return `https://vidsrc.xyz/embed/${tipo}/${imdb}`;
             }
         }
         
@@ -171,7 +174,6 @@
         
         function closeModal() {
             document.getElementById('seasonModal').style.display = 'none';
-            // no limpiamos pending aquí para que confirmSeriesPlay los use
         }
         
         async function confirmSeriesPlay() {
@@ -184,7 +186,6 @@
             
             if (!tmdbId || !tipo) return;
             
-            // ahora sí limpiamos las variables globales
             pendingTmdbId = null;
             pendingTipo = null;
             
