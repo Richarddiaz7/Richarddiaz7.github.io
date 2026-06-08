@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <title>MY Xinema</title>
+    <title>Richard Cinema</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -16,11 +16,10 @@
         }
         .header { text-align: center; margin-bottom: 30px; }
         .header h1 { font-size: 2em; background: linear-gradient(135deg, #FFD700, #FF6B6B); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .search-box { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
+        .search-box { display: flex; gap: 10px; margin-bottom: 20px; }
         .search-input { flex: 1; padding: 15px; border: none; border-radius: 15px; background: rgba(255,255,255,0.1); color: white; font-size: 16px; }
         .search-input::placeholder { color: rgba(255,255,255,0.6); }
         .search-btn { padding: 15px 25px; border: none; border-radius: 15px; background: linear-gradient(135deg, #FF6B6B, #FF8E53); color: white; font-weight: bold; cursor: pointer; }
-        .source-selector { padding: 12px 15px; border: none; border-radius: 15px; background: rgba(255,255,255,0.1); color: white; font-size: 14px; cursor: pointer; outline: none; }
         .genres { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
         .genre-btn { padding: 12px; border: none; border-radius: 25px; background: rgba(255,255,255,0.1); color: white; cursor: pointer; }
         .movies-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; margin-top: 20px; }
@@ -37,31 +36,18 @@
         @keyframes spin { to { transform: rotate(360deg); } }
         .welcome { text-align: center; padding: 40px; background: rgba(255,255,255,0.05); border-radius: 20px; }
         button:active { transform: scale(0.95); }
-        label.source-label { font-size: 14px; margin-right: 5px; align-self: center; }
-        .note { font-size: 12px; color: #aaa; margin-top: 5px; text-align: center; }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>🎬 My Xinema</h1>
+        <h1>🎬 Richard Cinema</h1>
         <p>Tu cine en Telegram</p>
     </div>
     
     <div class="search-box">
         <input type="text" id="searchInput" class="search-input" placeholder="🔍 Buscar película...">
         <button class="search-btn" onclick="searchMovies()">Buscar</button>
-        <div style="display: flex; align-items: center; gap: 5px; margin-left: 10px;">
-            <label for="sourceSelect" class="source-label">📺 API:</label>
-            <select id="sourceSelect" class="source-selector">
-                <option value="vidsrc">Vidsrc.me (app)</option>
-                <option value="playimdb">PlayIMDB.domains (app)</option>
-                <option value="autoembed">Autoembed.co (externo)</option>
-                <option value="primesrc">PrimeSrc.me (externo)</option>
-                <option value="2embed">2embed.to (externo)</option>
-            </select>
-        </div>
     </div>
-    <div class="note">⚡ Las APIs marcadas como "externo" abrirán el reproductor en tu navegador.</div>
     
     <div class="genres">
         <button class="genre-btn" onclick="getGenre(28)">🔥 Acción</button>
@@ -104,65 +90,25 @@
         function showLoading() { document.getElementById('loading').classList.add('active'); document.getElementById('results').innerHTML = ''; }
         function hideLoading() { document.getElementById('loading').classList.remove('active'); }
         
-        function buildPlayUrl(source, tipo, imdbId) {
-            const imdb = imdbId.startsWith('tt') ? imdbId : `tt${imdbId}`;
-            switch(source) {
-                case 'vidsrc':
-                    return `https://vidsrc.me/embed/${tipo}?imdb=${imdb}&autoplay=1`;
-                case 'playimdb':
-                    // Ajusta esta URL según lo que hayas confirmado en el navegador
-                    return `https://playimdb.domains/embed/imdb/${imdb}`;
-                case 'autoembed':
-                    return `https://autoembed.co/${tipo}/imdb.php?imdb=${imdb}`;
-                case 'primesrc':
-                    return `https://primesrc.me/${tipo}/imdb/${imdb}`;
-                case '2embed':
-                    return `https://2embed.to/embed/imdb/${imdb}`;
-                default:
-                    return `https://vidsrc.me/embed/${tipo}?imdb=${imdb}&autoplay=1`;
-            }
-        }
-        
-        function openExternalUrl(url) {
-            // Mostrar notificación primero
-            tg.showPopup({
-                title: 'Reproductor externo',
-                message: 'Se abrirá en tu navegador. Si no ves nada, revisa los permisos de ventanas emergentes.',
-                buttons: [{type: 'ok'}]
-            }, function() {
-                // Intentar con Telegram API
-                try {
-                    tg.openLink(url);
-                } catch(e) {
-                    // Fallback a window.open
-                    window.open(url, '_blank');
-                }
-            });
-        }
-        
         async function playMovie(tmdbId, tipo) {
             const imdbId = await getIMDBId(tmdbId, tipo);
-            const source = document.getElementById('sourceSelect').value;
-            const url = buildPlayUrl(source, tipo, imdbId);
+            const url = `https://vidsrc.me/embed/${tipo}?imdb=${imdbId}&autoplay=1`;
+            const frame = document.getElementById('videoFrame');
+            const player = document.getElementById('videoPlayer');
             
-            // APIs que sabemos que permiten iframe (vidsrc, playimdb)
-            if (source === 'vidsrc' || source === 'playimdb') {
-                const frame = document.getElementById('videoFrame');
-                const player = document.getElementById('videoPlayer');
-                frame.src = url;
-                player.classList.add('active');
-                setTimeout(() => {
-                    try { frame.requestFullscreen(); } catch(e) {}
-                }, 500);
-            } else {
-                // APIs que no permiten iframe: abrir externamente
-                openExternalUrl(url);
-            }
+            frame.src = url;
+            player.classList.add('active');
+            
+            // Forzar pantalla completa en el iframe
+            setTimeout(() => {
+                try { frame.requestFullscreen(); } catch(e) {}
+            }, 500);
         }
         
         function closeVideo() {
             document.getElementById('videoFrame').src = '';
             document.getElementById('videoPlayer').classList.remove('active');
+            // Salir de pantalla completa
             try { document.exitFullscreen(); } catch(e) {}
         }
         
@@ -204,6 +150,7 @@
             }).join('');
         }
         
+        // Escuchar cuando se salga de pantalla completa para cerrar el player
         document.addEventListener('fullscreenchange', () => {
             if (!document.fullscreenElement) {
                 closeVideo();
