@@ -52,6 +52,7 @@
         <div style="display: flex; align-items: center; gap: 5px; margin-left: 10px;">
             <label for="sourceSelect" class="source-label">📺 API:</label>
             <select id="sourceSelect" class="source-selector">
+                <option value="vidsrc">Vidsrc.me</option>
                 <option value="playimdb">PlayIMDB.com</option>
                 <option value="autoembed">Autoembed.co</option>
             </select>
@@ -101,16 +102,17 @@
         
         function buildPlayUrl(source, tipo, imdbId) {
             const imdb = imdbId.startsWith('tt') ? imdbId : `tt${imdbId}`;
-            if (source === 'playimdb') {
-                return `https://playimdb.com/embed/imdb/${imdb}`;
-            } else { // autoembed
-                if (tipo === 'movie') {
-                    // Ruta corregida según documentación
-                    return `https://autoembed.co/movie/imdb/${imdb}`;
-                } else { // tv
-                    // Las series requieren temporada y episodio; por defecto 1-1
-                    return `https://autoembed.co/tv/imdb/${imdb}-1-1`;
-                }
+            switch(source) {
+                case 'vidsrc':
+                    return `https://vidsrc.me/embed/${tipo}?imdb=${imdb}&autoplay=1`;
+                case 'playimdb':
+                    return `https://playimdb.com/embed/imdb/${imdb}`;
+                case 'autoembed':
+                    return tipo === 'movie'
+                        ? `https://autoembed.co/movie/imdb/${imdb}`
+                        : `https://autoembed.co/tv/imdb/${imdb}-1-1`;
+                default:
+                    return `https://vidsrc.me/embed/${tipo}?imdb=${imdb}&autoplay=1`;
             }
         }
         
