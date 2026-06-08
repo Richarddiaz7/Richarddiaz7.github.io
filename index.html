@@ -104,7 +104,13 @@
             if (source === 'playimdb') {
                 return `https://playimdb.com/embed/imdb/${imdb}`;
             } else { // autoembed
-                return `https://autoembed.co/${tipo}/imdb.php?imdb=${imdb}`;
+                if (tipo === 'movie') {
+                    // Ruta corregida según documentación
+                    return `https://autoembed.co/movie/imdb/${imdb}`;
+                } else { // tv
+                    // Las series requieren temporada y episodio; por defecto 1-1
+                    return `https://autoembed.co/tv/imdb/${imdb}-1-1`;
+                }
             }
         }
         
