@@ -54,13 +54,12 @@
             <select id="sourceSelect" class="source-selector">
                 <option value="vidsrcto">Vidsrc.to</option>
                 <option value="vidsrcpro">Vidsrc.pro</option>
-                <option value="vidsrcrip">Vidsrc.rip</option>
-                <option value="vidsrcxyz">Vidsrc.xyz</option>
                 <option value="playimdb">PlayIMDB.com</option>
                 <option value="autoembed">Autoembed.co</option>
             </select>
         </div>
     </div>
+    <div style="text-align:center; font-size:12px; color:#aaa; margin-bottom:10px;">🔒 Bloqueo de anuncios en móvil. En PC usa PlayIMDB o Autoembed.</div>
     
     <div class="genres">
         <button class="genre-btn" onclick="getGenre(28)">🔥 Acción</button>
@@ -77,7 +76,8 @@
     
     <div id="videoPlayer" class="video-player">
         <button class="close-video" onclick="closeVideo()">✕ Cerrar</button>
-        <iframe id="videoFrame" class="video-frame" allowfullscreen></iframe>
+        <iframe id="videoFrame" class="video-frame" allowfullscreen 
+                sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"></iframe>
     </div>
     
     <script>
@@ -87,14 +87,6 @@
         tg.requestFullscreen();
         
         const TMDB_API = "d73daaeb037829af157af19c3bc8b1fd";
-        
-        // Detectar si es móvil para activar sandbox solo ahí
-        const isMobile = ['ios', 'android'].includes(tg.platform);
-        // Configurar el iframe según plataforma
-        const iframe = document.getElementById('videoFrame');
-        if (isMobile) {
-            iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-presentation');
-        } // en escritorio no añadimos sandbox
         
         async function getIMDBId(tmdbId, tipo) {
             try {
@@ -118,10 +110,6 @@
                     return `https://vidsrc.to/embed/${tipo}/${imdb}`;
                 case 'vidsrcpro':
                     return `https://vidsrc.pro/embed/${tipo}/${imdb}`;
-                case 'vidsrcrip':
-                    return `https://vidsrc.rip/embed/${tipo}/${imdb}`;
-                case 'vidsrcxyz':
-                    return `https://vidsrc.xyz/embed/${tipo}/${imdb}`;
                 case 'playimdb':
                     return `https://playimdb.com/embed/imdb/${imdb}`;
                 case 'autoembed':
