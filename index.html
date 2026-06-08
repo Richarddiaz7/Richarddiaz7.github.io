@@ -75,13 +75,10 @@
                 <option value="vidsrcpro">Vidsrc.pro</option>
                 <option value="playimdb">PlayIMDB.com</option>
                 <option value="autoembed">Autoembed.co</option>
-                <option value="2embed">2embed.to</option>
             </select>
         </div>
     </div>
-    <div style="text-align:center; font-size:12px; color:#aaa; margin-bottom:10px;">
-        🔒 Sin anuncios en móvil. Series: elige temporada y episodio. Prueba 2embed para subtítulos en español.
-    </div>
+    <div style="text-align:center; font-size:12px; color:#aaa; margin-bottom:10px;">🔒 Bloqueo de anuncios en móvil. Series: elige temporada y episodio.</div>
     
     <div class="genres">
         <button class="genre-btn" onclick="getGenre(28)">🔥 Acción</button>
@@ -125,6 +122,7 @@
         tg.requestFullscreen();
         
         const TMDB_API = "d73daaeb037829af157af19c3bc8b1fd";
+        
         let pendingTmdbId = null;
         let pendingTipo = null;
         
@@ -158,13 +156,6 @@
                     } else {
                         return `https://autoembed.co/movie/imdb/${imdb}`;
                     }
-                case '2embed':
-                    // 2embed utiliza la misma ruta para películas y series, pero requiere season/episode en series
-                    if (tipo === 'tv') {
-                        return `https://2embed.to/embed/imdb/${imdb}-${season}-${episode}`;
-                    } else {
-                        return `https://2embed.to/embed/imdb/${imdb}`;
-                    }
                 default:
                     return `https://vidsrc.to/embed/${tipo}/${imdb}`;
             }
@@ -180,6 +171,7 @@
         
         function closeModal() {
             document.getElementById('seasonModal').style.display = 'none';
+            // no limpiamos pending aquí para que confirmSeriesPlay los use
         }
         
         async function confirmSeriesPlay() {
@@ -192,6 +184,7 @@
             
             if (!tmdbId || !tipo) return;
             
+            // ahora sí limpiamos las variables globales
             pendingTmdbId = null;
             pendingTipo = null;
             
