@@ -56,14 +56,14 @@
             <label for="sourceSelect" class="source-label">📺 API:</label>
             <select id="sourceSelect" class="source-selector">
                 <option value="vidsrc">Vidsrc.me (app)</option>
-                <option value="playimdb">PlayIMDB.com</option>
-                <option value="autoembed">Autoembed.co</option>
-                <option value="primesrc">PrimeSrc.me</option>
-                <option value="2embed">2embed.to</option>
+                <option value="playimdb">PlayIMDB.com (app)</option>
+                <option value="autoembed">Autoembed.co (externo)</option>
+                <option value="primesrc">PrimeSrc.me (externo)</option>
+                <option value="2embed">2embed.to (externo)</option>
             </select>
         </div>
     </div>
-    <div class="note">⚡ Solo Vidsrc se reproduce dentro de la app. Las demás abren el reproductor en tu navegador.</div>
+    <div class="note">⚡ PlayIMDB se probará dentro de la app. Las APIs "externo" abrirán tu navegador.</div>
     
     <div class="genres">
         <button class="genre-btn" onclick="getGenre(28)">🔥 Acción</button>
@@ -91,7 +91,7 @@
         tg.requestFullscreen();
         
         const TMDB_API = "d73daaeb037829af157af19c3bc8b1fd";
-        let currentVideoUrl = ''; // Guardamos la URL actual por si se quiere abrir externamente
+        let currentVideoUrl = '';
         
         async function getIMDBId(tmdbId, tipo) {
             try {
@@ -133,7 +133,6 @@
                 buttons: [{type: 'ok'}]
             }, function() {
                 tg.openLink(url);
-                // Fallback por si tg.openLink no funciona
                 setTimeout(() => { window.open(url, '_blank'); }, 300);
             });
         }
@@ -144,8 +143,8 @@
             const url = buildPlayUrl(source, tipo, imdbId);
             currentVideoUrl = url;
             
-            if (source === 'vidsrc') {
-                // Cargar en iframe (único que funciona)
+            // Probamos PlayIMDB en iframe junto con Vidsrc
+            if (source === 'vidsrc' || source === 'playimdb') {
                 const frame = document.getElementById('videoFrame');
                 const player = document.getElementById('videoPlayer');
                 frame.src = url;
@@ -154,7 +153,6 @@
                     try { frame.requestFullscreen(); } catch(e) {}
                 }, 500);
             } else {
-                // Abrir externamente
                 openExternalUrl(url);
             }
         }
