@@ -53,14 +53,15 @@
         <div style="display: flex; align-items: center; gap: 5px; margin-left: 10px;">
             <label for="sourceSelect" class="source-label">📺 API:</label>
             <select id="sourceSelect" class="source-selector">
-                <option value="vidsrc">Vidsrc.me (iframe)</option>
-                <option value="autoembed">Autoembed.co (navegador)</option>
-                <option value="primesrc">PrimeSrc.me (navegador)</option>
-                <option value="2embed">2embed.to (navegador)</option>
+                <option value="vidsrc">Vidsrc.me (app)</option>
+                <option value="playimdb">PlayIMDB.domains (app)</option>
+                <option value="autoembed">Autoembed.co (externo)</option>
+                <option value="primesrc">PrimeSrc.me (externo)</option>
+                <option value="2embed">2embed.to (externo)</option>
             </select>
         </div>
     </div>
-    <div class="note">⚡ Solo Vidsrc se reproduce dentro de la app. Las demás abren el reproductor en tu navegador.</div>
+    <div class="note">⚡ Las APIs marcadas como "externo" abrirán el reproductor en tu navegador.</div>
     
     <div class="genres">
         <button class="genre-btn" onclick="getGenre(28)">🔥 Acción</button>
@@ -108,6 +109,9 @@
             switch(source) {
                 case 'vidsrc':
                     return `https://vidsrc.me/embed/${tipo}?imdb=${imdb}&autoplay=1`;
+                case 'playimdb':
+                    // Ajusta esta URL según lo que hayas confirmado en el navegador
+                    return `https://playimdb.domains/embed/imdb/${imdb}`;
                 case 'autoembed':
                     return `https://autoembed.co/${tipo}/imdb.php?imdb=${imdb}`;
                 case 'primesrc':
@@ -119,13 +123,30 @@
             }
         }
         
+        function openExternalUrl(url) {
+            // Mostrar notificación primero
+            tg.showPopup({
+                title: 'Reproductor externo',
+                message: 'Se abrirá en tu navegador. Si no ves nada, revisa los permisos de ventanas emergentes.',
+                buttons: [{type: 'ok'}]
+            }, function() {
+                // Intentar con Telegram API
+                try {
+                    tg.openLink(url);
+                } catch(e) {
+                    // Fallback a window.open
+                    window.open(url, '_blank');
+                }
+            });
+        }
+        
         async function playMovie(tmdbId, tipo) {
             const imdbId = await getIMDBId(tmdbId, tipo);
             const source = document.getElementById('sourceSelect').value;
             const url = buildPlayUrl(source, tipo, imdbId);
             
-            if (source === 'vidsrc') {
-                // Reproducir en iframe (soportado)
+            // APIs que sabemos que permiten iframe (vidsrc, playimdb)
+            if (source === 'vidsrc' || source === 'playimdb') {
                 const frame = document.getElementById('videoFrame');
                 const player = document.getElementById('videoPlayer');
                 frame.src = url;
@@ -134,10 +155,8 @@
                     try { frame.requestFullscreen(); } catch(e) {}
                 }, 500);
             } else {
-                // Abrir en navegador externo con Telegram API
-                tg.openLink(url);
-                // Opcional: mostrar un toast de confirmación
-                tg.showPopup({ message: 'Abriendo reproductor externo...' });
+                // APIs que no permiten iframe: abrir externamente
+                openExternalUrl(url);
             }
         }
         
